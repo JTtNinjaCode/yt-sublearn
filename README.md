@@ -10,39 +10,25 @@ Given a YouTube URL, it:
 ## Requirements
 
 - [Claude Code](https://claude.ai/code)
-- [uv](https://docs.astral.sh/uv/) — for running the download script
+- [uv](https://docs.astral.sh/uv/)
 
-## Setup
+## Installation
 
-**1. Clone the repo**
+**From a local clone:**
 
 ```bash
 git clone <repo_url>
 cd yt-translate
+/plugin install .
 ```
 
-**2. Register the plugin in Claude Code**
+**From GitHub (once published):**
 
-Add to `~/.claude/plugins/installed_plugins.json`:
-
-```json
-"yt-translate@local": [{
-  "scope": "user",
-  "installPath": "/absolute/path/to/yt-translate/plugin",
-  "version": "0.1.0",
-  "installedAt": "2026-01-01T00:00:00.000Z"
-}]
+```
+/plugin install yt-translate@<github-username>/<repo-name>
 ```
 
-Add to `~/.claude/settings.json` under `enabledPlugins`:
-
-```json
-"yt-translate@local": true
-```
-
-**3. Restart Claude Code**
-
-No other setup needed — dependencies are downloaded automatically on first use.
+No other setup required. Dependencies (yt-dlp) are downloaded automatically on first use.
 
 ## Usage
 
@@ -75,10 +61,10 @@ If the video has no English subtitles, the skill stops with a clear error messag
 ```
 /yt-translate
     │
-    ├─ 1. uv run plugin/scripts/download.py   (PEP 723 script, auto-installs yt-dlp)
+    ├─ 1. uv run skills/yt-translate/scripts/download.py   (PEP 723, auto-installs yt-dlp)
     │       └─ validates English subs exist → downloads .en.srt
     │
-    ├─ 2. haiku subagent                       (lightweight, token-efficient)
+    ├─ 2. haiku subagent                                    (lightweight, token-efficient)
     │       └─ translates SRT → bilingual .txt with [HH:MM:SS] timestamps
     │
     └─ 3. main model
@@ -90,7 +76,7 @@ The download script uses [PEP 723](https://peps.python.org/pep-0723/) inline scr
 ## Project Structure
 
 ```
-plugin/
+.
 ├── .claude-plugin/plugin.json              — plugin metadata
 ├── skills/
 │   └── yt-translate/
@@ -100,3 +86,7 @@ plugin/
 └── agents/
     └── yt-subtitle-translator.md           — haiku translator subagent
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
