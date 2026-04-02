@@ -19,26 +19,42 @@ The user calls this skill as:
 
 ## Workflow
 
-### Step 1 — Download English Subtitles
+### Step 1 — Locate the plugin directory
 
-Run the download script via Bash:
+Run this Bash command to find where this plugin is installed:
 
 ```bash
-yt-download <youtube_url> <output_dir>
+python3 -c "
+import json, os
+data = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+for key, entries in data.get('plugins', {}).items():
+    if 'yt-translate' in key:
+        print(entries[0]['installPath'])
+        break
+"
 ```
 
-(This command is installed globally via `uv tool install .` — see setup instructions.)
+Save the output as `PLUGIN_DIR`. If the command returns nothing, tell the user the plugin is not registered and stop.
 
-- If the exit code is **not 0**: display the error message from stderr to the user and **stop**. Do not proceed.
-- If exit code is **0**: the stdout contains the absolute path to the downloaded `.en.srt` file. Save this path.
+### Step 2 — Download English Subtitles
 
-### Step 2 — Read the Subtitle File
+Run:
+
+```bash
+uv run "$PLUGIN_DIR/scripts/download.py" <youtube_url> <output_dir>
+```
+
+- `uv run` automatically installs yt-dlp into an isolated cache and runs the script — no manual setup needed.
+- If the exit code is **not 0**: display the error message from stderr to the user and **stop**.
+- If exit code is **0**: stdout contains the absolute path to the downloaded `.en.srt` file.
+
+### Step 3 — Read the Subtitle File
 
 Read the full content of the `.en.srt` file.
 
 Compute the bilingual output path by replacing `.en.srt` with `_bilingual.txt` in the same directory.
 
-### Step 3 — Translate via Haiku Subagent
+### Step 4 — Translate via Haiku Subagent
 
 Spawn a `yt-translate:yt-subtitle-translator` Agent to perform the translation. Pass it a prompt containing:
 
@@ -47,7 +63,7 @@ Spawn a `yt-translate:yt-subtitle-translator` Agent to perform the translation. 
 
 The subagent will translate every subtitle entry to Traditional Chinese and write the bilingual file.
 
-### Step 4 — Generate Video Summary
+### Step 5 — Generate Video Summary
 
 After the subagent completes, read the bilingual output file.
 
@@ -61,8 +77,8 @@ Write a concise summary of **150–250 words** that plays the role of a paper's 
 
 Write the summary in **Traditional Chinese (繁體中文)**, since it serves as the user's pre-watch orientation.
 
-### Step 5 — Present Results
+### Step 6 — Present Results
 
 Display to the user:
-1. The summary (formatted clearly, no excessive headers)
-2. A single line showing the bilingual file path so the user knows where to find it
+1. The summary (formatted clearly)
+2. A single line showing the bilingual file path

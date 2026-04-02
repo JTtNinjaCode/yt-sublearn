@@ -1,15 +1,13 @@
 # yt-translate
 
-A Claude Code plugin that downloads YouTube English subtitles, translates them into bilingual EN/ZH format, and generates a video summary for English learning.
+A Claude Code plugin that downloads YouTube English subtitles, translates them into bilingual EN/ZH format using a haiku subagent, and generates an abstract-style summary for English learning.
 
 ## Setup
 
 ```bash
-# 1. Install the CLI tool globally
-uv tool install .
-
-# 2. Register the plugin in Claude Code
+# 1. Register the plugin in Claude Code
 #    Add to ~/.claude/plugins/installed_plugins.json:
+#
 #    "yt-translate@local": [{
 #      "scope": "user",
 #      "installPath": "/absolute/path/to/this/plugin/ directory",
@@ -17,11 +15,13 @@ uv tool install .
 #      "installedAt": "<ISO timestamp>"
 #    }]
 #
-#    Add to ~/.claude/settings.json enabledPlugins:
+#    Add to ~/.claude/settings.json > enabledPlugins:
 #    "yt-translate@local": true
 
-# 3. Restart Claude Code
+# 2. Restart Claude Code
 ```
+
+No other setup required. Dependencies (yt-dlp) are downloaded automatically on first use via `uv run`.
 
 ## Usage
 
@@ -30,19 +30,16 @@ uv tool install .
 ```
 
 - `output_dir` defaults to `./output/`
-- Only English subtitles are supported; videos without English subs will show an error
+- Only English subtitles are supported; videos without English subs show an error
 
 ## Project Structure
 
 ```
-src/yt_translate/download.py   — CLI: validates & downloads English SRT via yt-dlp
-plugin/skills/yt-translate/    — /yt-translate skill definition
-plugin/agents/                 — yt-subtitle-translator haiku subagent
+plugin/
+├── .claude-plugin/plugin.json          — plugin metadata
+├── scripts/download.py                 — PEP 723 standalone script (yt-dlp)
+├── skills/yt-translate/SKILL.md        — /yt-translate skill definition
+└── agents/yt-subtitle-translator.md    — haiku translator subagent
 ```
 
-## Development
-
-```bash
-uv sync          # install deps into .venv
-uv tool install . --reinstall   # update the global yt-download after code changes
-```
+`download.py` uses PEP 723 inline script metadata — `uv run` handles the venv automatically, cached at `~/.cache/uv/`.

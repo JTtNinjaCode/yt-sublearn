@@ -1,7 +1,11 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["yt-dlp>=2024.0.0"]
+# ///
 """
 Download English subtitles from YouTube using yt-dlp.
 
-Usage: yt-download <url> <output_dir>
+Usage: uv run download.py <youtube_url> <output_dir>
 
 Exit codes:
   0 — success; absolute path to .en.srt file printed to stdout
@@ -22,9 +26,7 @@ def _has_english_subs(url: str) -> bool:
         capture_output=True,
         text=True,
     )
-    # yt-dlp lists subtitles as lines starting with the language code.
-    # We match "en" at the start of a line (possibly with leading whitespace),
-    # covering en, en-US, en-GB, etc.
+    # Match "en" at the start of a line (covers en, en-US, en-GB, etc.)
     return bool(re.search(r"^\s*en\b", result.stdout, re.MULTILINE))
 
 
@@ -33,9 +35,9 @@ def _download_srt(url: str, output_dir: Path) -> Path:
     subprocess.run(
         [
             "yt-dlp",
-            "--write-sub",        # manual subtitles
-            "--write-auto-sub",   # auto-generated (English only via --sub-lang)
-            "--sub-lang", "en",   # English only — rejects all other languages
+            "--write-sub",       # manual subtitles
+            "--write-auto-sub",  # auto-generated (filtered to English via --sub-lang)
+            "--sub-lang", "en",  # English only — rejects all other languages
             "--convert-subs", "srt",
             "--skip-download",
             "-o", str(output_dir / "%(title)s.%(ext)s"),
@@ -51,15 +53,12 @@ def _download_srt(url: str, output_dir: Path) -> Path:
         raise FileNotFoundError(
             "yt-dlp reported success but no .en.srt file was found in the output directory."
         )
-    return srt_files[-1]  # most recently modified
+    return srt_files[-1]
 
 
 def main() -> None:
     if len(sys.argv) < 3:
-        print(
-            "Usage: yt-download <youtube_url> <output_dir>",
-            file=sys.stderr,
-        )
+        print("Usage: uv run download.py <youtube_url> <output_dir>", file=sys.stderr)
         sys.exit(2)
 
     url = sys.argv[1]
