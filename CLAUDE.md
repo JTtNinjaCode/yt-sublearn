@@ -6,7 +6,8 @@ A Claude Code plugin for English learning via YouTube subtitles.
 
 In Claude Code:
 ```
-/plugin install yt-sublearn@JTtNinjaCode/yt-sublearn
+/plugin marketplace add JTtNinjaCode/yt-sublearn
+/plugin install yt-sublearn@JTtNinjaCode
 ```
 
 ## Usage

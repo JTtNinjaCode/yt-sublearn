@@ -1,0 +1,14 @@
+{
+  "name": "JTtNinjaCode",
+  "owner": {
+    "name": "Brian",
+    "url": "https://github.com/JTtNinjaCode"
+  },
+  "plugins": [
+    {
+      "name": "yt-sublearn",
+      "source": "./",
+      "description": "Download YouTube English subtitles, translate to bilingual EN/ZH format, and generate a video summary for English learning"
+    }
+  ]
+}
