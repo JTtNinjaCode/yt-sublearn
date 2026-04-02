@@ -1,25 +1,32 @@
 ---
-name: yt-sublearn
-description: Download English subtitles from a YouTube video, translate them into a bilingual EN/ZH file with timestamps, and generate a concise abstract-style summary of the video. Use this skill when the user wants to study English through YouTube content.
+name: yt_translate
+description: Download English subtitles from a YouTube video, split them into 50-entry chunks, translate the chunks in parallel with a minimal subtitle subagent, merge the bilingual outputs, and generate a concise Traditional Chinese summary.
 ---
 
-You help the user learn English by processing YouTube videos into bilingual study materials.
+You orchestrate a low-latency YouTube subtitle translation workflow.
 
 ## Invocation
 
 The user calls this skill as:
-```
-/yt-sublearn <youtube_url> [output_dir]
+
+```bash
+/yt_translate <youtube_url> [output_dir]
 ```
 
-- `<youtube_url>` — required, the YouTube video URL
-- `[output_dir]` — optional, defaults to `./output/`
+- `<youtube_url>`: required
+- `[output_dir]`: optional, defaults to `./output/`
 
----
+## Design Goals
+
+- Keep main-agent context small
+- Push mechanical work into Python scripts
+- Keep subtitle subagents minimal
+- Parallelize translation across chunk files
+- Avoid passing raw full SRT content between agents
 
 ## Workflow
 
-### Step 1 — Download English Subtitles
+### Step 1 — Download, normalize, and split subtitles
 
 Run:
 
@@ -27,41 +34,90 @@ Run:
 uv run "${CLAUDE_SKILL_DIR}/scripts/download.py" <youtube_url> <output_dir>
 ```
 
-- `uv run` automatically installs yt-dlp into an isolated cache and runs the script — no manual setup needed.
-- If the exit code is **not 0**: display the error message from stderr to the user and **stop**.
-- If exit code is **0**: stdout contains the absolute path to the downloaded `.en.srt` file.
+Behavior:
+- Downloads English subtitles with `yt-dlp`
+- Cleans rolling auto-caption duplication
+- Merges fragmented subtitles into sentence-style entries
+- Splits the normalized SRT into multiple chunk files, each containing **50 subtitle entries**
+- Writes a manifest JSON file describing all generated paths
 
-### Step 2 — Read the Subtitle File
+Exit handling:
+- If exit code is **1**, report that no English subtitles are available and stop.
+- If exit code is **2**, report stderr and stop.
+- If exit code is **0**, stdout is the absolute path to the manifest JSON file.
 
-Read the full content of the `.en.srt` file.
+### Step 2 — Read only the manifest
 
-Compute the bilingual output path by replacing `.en.srt` with `_bilingual.txt` in the same directory.
+Read the manifest JSON file produced by `download.py`.
 
-### Step 3 — Translate via Haiku Subagent
+The manifest contains at least:
+- source SRT path
+- chunk directory
+- ordered chunk file paths
+- final bilingual output path
+- chunk bilingual output paths
+- summary source path
 
-Spawn a `yt-sublearn:yt-subtitle-translator` Agent to perform the translation. Pass it a prompt containing:
+Do **not** read the full source SRT in the main agent.
 
-1. The complete raw SRT file content (verbatim, inside a code block)
-2. The absolute bilingual output file path
+### Step 3 — Translate chunks in parallel with subagents
 
-The subagent will translate every subtitle entry to Traditional Chinese and write the bilingual file.
+For each chunk listed in the manifest, spawn a `yt_translate:yt-subtitle-translator` subagent.
 
-### Step 4 — Generate Video Summary
+Pass each subagent only:
+- the absolute input chunk path
+- the absolute output bilingual chunk path
 
-After the subagent completes, read the bilingual output file.
+Do not inline subtitle content into the prompt.
+Do not ask the subagent to summarize.
+Do not give the subagent any extra context.
 
-Write a concise summary of **150–250 words** that plays the role of a paper's **abstract + introduction + conclusion**. The summary must tell the user:
+All chunk translations should be launched in parallel whenever the runtime allows it.
 
-- **Main topic**: What is this video fundamentally about?
-- **Purpose**: What problem does it solve or what concept does it teach?
-- **Key concepts & technologies**: List the major technical terms, tools, or ideas covered
-- **Content structure**: How does the video progress (overview → demo → conclusion, etc.)
-- **Takeaway**: What will the viewer know or be able to do after watching?
+### Step 4 — Merge bilingual chunk outputs
 
-Write the summary in **Traditional Chinese (繁體中文)**, since it serves as the user's pre-watch orientation.
+After all subtitle subagents finish, run:
 
-### Step 5 — Present Results
+```bash
+uv run "${CLAUDE_SKILL_DIR}/scripts/merge.py" <manifest_json_path>
+```
 
-Display to the user:
-1. The summary (formatted clearly)
-2. A single line showing the bilingual file path
+Behavior:
+- Verifies all translated chunk files exist
+- Merges chunk outputs in chunk index order
+- Writes the final bilingual file
+- Writes a smaller `summary_source.txt` for summary generation
+
+If merge fails, show the error and stop.
+
+### Step 5 — Generate the video summary
+
+Read only the generated `summary_source.txt`.
+
+Using that file, write a concise **150–250 word Traditional Chinese summary** that acts like:
+- abstract
+- introduction
+- conclusion
+
+The summary should cover:
+- main topic
+- purpose
+- major concepts / tools / technologies
+- content flow
+- final takeaway
+
+Do not read every chunk file again unless merge output is missing.
+
+### Step 6 — Present results
+
+Return:
+1. The Traditional Chinese summary
+2. The final bilingual file path
+3. The chunk directory path
+
+## Important Rules
+
+- The main agent should not ingest raw full-subtitle content unless recovery is absolutely necessary.
+- The main agent is an orchestrator, not a translator.
+- All heavy file transformation should stay in Python scripts.
+- Summary input must come from `summary_source.txt`, not by concatenating every chunk in the prompt.
