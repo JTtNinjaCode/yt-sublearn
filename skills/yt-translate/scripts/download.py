@@ -20,11 +20,15 @@ from pathlib import Path
 
 
 def _has_english_subs(url: str) -> bool:
-    """Return True if the video has English subtitles (manual or auto-generated)."""
+    """Return True if the video has English subtitles (manual or auto-generated).
+
+    Raises subprocess.CalledProcessError if yt-dlp fails (invalid URL, network error, etc.).
+    """
     result = subprocess.run(
         ["yt-dlp", "--list-subs", "--skip-download", url],
         capture_output=True,
         text=True,
+        check=True,
     )
     # Match "en" at the start of a line (covers en, en-US, en-GB, etc.)
     return bool(re.search(r"^\s*en\b", result.stdout, re.MULTILINE))
@@ -65,7 +69,13 @@ def main() -> None:
     output_dir = Path(sys.argv[2]).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    if not _has_english_subs(url):
+    try:
+        has_en = _has_english_subs(url)
+    except subprocess.CalledProcessError as exc:
+        print(f"ERROR: yt-dlp failed:\n{exc.stderr}", file=sys.stderr)
+        sys.exit(2)
+
+    if not has_en:
         print(
             "ERROR: This video has no English subtitles (neither manual nor auto-generated).\n"
             "Only English subtitles are supported. Please choose a video with English subtitles.",

@@ -31,13 +31,13 @@ uv run "${CLAUDE_SKILL_DIR}/scripts/download.py" <youtube_url> <output_dir>
 - If the exit code is **not 0**: display the error message from stderr to the user and **stop**.
 - If exit code is **0**: stdout contains the absolute path to the downloaded `.en.srt` file.
 
-### Step 3 — Read the Subtitle File
+### Step 2 — Read the Subtitle File
 
 Read the full content of the `.en.srt` file.
 
 Compute the bilingual output path by replacing `.en.srt` with `_bilingual.txt` in the same directory.
 
-### Step 4 — Translate via Haiku Subagent
+### Step 3 — Translate via Haiku Subagent
 
 Spawn a `yt-translate:yt-subtitle-translator` Agent to perform the translation. Pass it a prompt containing:
 
@@ -46,7 +46,7 @@ Spawn a `yt-translate:yt-subtitle-translator` Agent to perform the translation. 
 
 The subagent will translate every subtitle entry to Traditional Chinese and write the bilingual file.
 
-### Step 5 — Generate Video Summary
+### Step 4 — Generate Video Summary
 
 After the subagent completes, read the bilingual output file.
 
@@ -60,7 +60,7 @@ Write a concise summary of **150–250 words** that plays the role of a paper's 
 
 Write the summary in **Traditional Chinese (繁體中文)**, since it serves as the user's pre-watch orientation.
 
-### Step 6 — Present Results
+### Step 5 — Present Results
 
 Display to the user:
 1. The summary (formatted clearly)

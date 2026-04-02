@@ -18,7 +18,7 @@ Given a YouTube URL, it:
 
 ```bash
 git clone <repo_url>
-cd yt-translate
+cd <repo_dir>
 /plugin install .
 ```
 
