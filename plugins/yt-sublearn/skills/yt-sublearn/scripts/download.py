@@ -19,6 +19,48 @@ import subprocess
 from pathlib import Path
 
 
+def _clean_srt(srt_path: Path) -> None:
+    """Remove duplicate rolling lines from YouTube auto-caption SRT files.
+
+    YouTube auto-captions use a "rolling" format where each entry repeats the
+    last line of the previous entry. This function deduplicates those lines so
+    each entry contains only the text that first appears in it.
+    """
+    content = srt_path.read_text(encoding="utf-8")
+
+    # Parse SRT blocks separated by blank lines
+    blocks = re.split(r"\n{2,}", content.strip())
+    entries = []
+    for block in blocks:
+        lines = block.split("\n")
+        if len(lines) < 3:
+            continue
+        try:
+            int(lines[0])  # must start with a sequence number
+        except ValueError:
+            continue
+        if "-->" not in lines[1]:
+            continue
+        entries.append((lines[1], lines[2:]))  # (timing, text_lines)
+
+    cleaned: list[tuple[str, list[str]]] = []
+    prev_seen: set[str] = set()
+
+    for timing, text_lines in entries:
+        nonempty = {l.strip() for l in text_lines if l.strip()}
+        new_lines = [l for l in text_lines if l.strip() and l.strip() not in prev_seen]
+        if new_lines:
+            cleaned.append((timing, new_lines))
+        if nonempty:
+            prev_seen = nonempty
+
+    output_blocks = [
+        f"{i}\n{timing}\n" + "\n".join(text_lines)
+        for i, (timing, text_lines) in enumerate(cleaned, 1)
+    ]
+    srt_path.write_text("\n\n".join(output_blocks) + "\n", encoding="utf-8")
+
+
 def _has_english_subs(url: str) -> bool:
     """Return True if the video has English subtitles (manual or auto-generated).
 
@@ -85,6 +127,7 @@ def main() -> None:
 
     try:
         srt_path = _download_srt(url, output_dir)
+        _clean_srt(srt_path)
         print(str(srt_path))
     except subprocess.CalledProcessError as exc:
         print(f"ERROR: yt-dlp failed:\n{exc.stderr}", file=sys.stderr)
