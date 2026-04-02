@@ -4,8 +4,9 @@ A Claude Code plugin for English learning via YouTube subtitles.
 
 ## Install
 
-```bash
-/plugin install .
+In Claude Code:
+```
+/plugin install /path/to/this/repo
 ```
 
 ## Usage
