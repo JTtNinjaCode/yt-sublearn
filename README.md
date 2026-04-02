@@ -14,20 +14,6 @@ Given a YouTube URL, it:
 
 ## Installation
 
-**From a local clone:**
-
-1. Clone the repo:
-   ```bash
-   git clone <repo_url>
-   ```
-
-2. In Claude Code, run:
-   ```
-   /plugin install /path/to/repo
-   ```
-
-**From GitHub (once published):**
-
 In Claude Code, run:
 ```
 /plugin install yt-translate@<github-username>/<repo-name>

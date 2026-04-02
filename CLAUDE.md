@@ -6,7 +6,7 @@ A Claude Code plugin for English learning via YouTube subtitles.
 
 In Claude Code:
 ```
-/plugin install /path/to/this/repo
+/plugin install yt-translate@<github-username>/<repo-name>
 ```
 
 ## Usage
