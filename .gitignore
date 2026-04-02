@@ -1,0 +1,18 @@
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# uv lock (keep uv.lock if you want reproducible installs, remove this line if so)
+# uv.lock
+
+# Downloaded subtitle files and translated output
+output/
+
+# OS
+.DS_Store
+Thumbs.db

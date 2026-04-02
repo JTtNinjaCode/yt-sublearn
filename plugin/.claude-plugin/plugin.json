@@ -1,0 +1,7 @@
+{
+  "name": "yt-translate",
+  "description": "Download YouTube English subtitles and translate to bilingual EN/ZH format with video summary for English learning",
+  "author": {
+    "name": "Brian"
+  }
+}
