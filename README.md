@@ -16,7 +16,7 @@ Given a YouTube URL, it:
 
 In Claude Code, run:
 ```
-/plugin install yt-sublearn@<github-username>/<repo-name>
+/plugin install yt-sublearn@JTtNinjaCode/yt-sublearn
 ```
 
 No other setup required. Dependencies (yt-dlp) are downloaded automatically on first use.
