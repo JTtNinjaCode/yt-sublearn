@@ -1,35 +1,32 @@
-# yt-sublearn
+# JTtNinjaCode Claude Plugins
 
-A Claude Code plugin for English learning via YouTube subtitles.
+A Claude Code plugin marketplace. Add new plugins under `plugins/<plugin-name>/`.
 
-## Install
+## Install (in Claude Code)
 
-In Claude Code:
 ```
 /plugin marketplace add JTtNinjaCode/yt-sublearn
 /plugin install yt-sublearn@JTtNinjaCode
 ```
 
-## Usage
+## Adding a New Plugin
 
-```
-/yt-sublearn <youtube_url> [output_dir]
-```
-
-`output_dir` defaults to `./output/`. Only English subtitles are supported.
+1. Create `plugins/<plugin-name>/` with its own `.claude-plugin/plugin.json`
+2. Add skills to `plugins/<plugin-name>/skills/<plugin-name>/`
+3. Add agents to `plugins/<plugin-name>/agents/`
+4. Register in `.claude-plugin/marketplace.json`
 
 ## Structure
 
 ```
 .
-├── .claude-plugin/plugin.json              — plugin metadata
-├── skills/
-│   └── yt-sublearn/
-│       ├── SKILL.md                        — /yt-sublearn skill definition
-│       └── scripts/
-│           └── download.py                 — PEP 723 standalone script (yt-dlp)
-└── agents/
-    └── yt-subtitle-translator.md           — haiku translator subagent
+├── .claude-plugin/
+│   └── marketplace.json
+└── plugins/
+    └── yt-sublearn/
+        ├── .claude-plugin/plugin.json
+        ├── skills/yt-sublearn/
+        │   ├── SKILL.md
+        │   └── scripts/download.py      — PEP 723 standalone script (yt-dlp)
+        └── agents/yt-subtitle-translator.md
 ```
-
-`download.py` uses PEP 723 inline script metadata — `uv run` handles the venv automatically, cached at `~/.cache/uv/`.

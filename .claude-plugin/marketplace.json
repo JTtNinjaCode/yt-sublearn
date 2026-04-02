@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "yt-sublearn",
-      "source": "./",
+      "source": "./plugins/yt-sublearn",
       "description": "Download YouTube English subtitles, translate to bilingual EN/ZH format, and generate a video summary for English learning"
     }
   ]
